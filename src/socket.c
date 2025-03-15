@@ -12,7 +12,6 @@ background: black
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <openssl/sha.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -22,7 +21,12 @@ background: black
 #include <unistd.h>
 
 // Local includes
-#include "bst.c"
+#include "bst.h"
+#include "sha1.h"
+
+// ### Globobal variables
+struct socketBST *sRoot = NULL;
+struct roomBST *rRoot = NULL;
 
 // TODO
 // Actually make the BST structs and functions work like real red-black BSTs.
@@ -157,7 +161,7 @@ void sendToRoom(char *msg, char *room){
 
   encoded[len] = 0;
 
-  struct roomBST *rNode = searchRoom(room);
+  struct roomBST *rNode = searchRoom(rRoot, room);
   struct identityBST *each = rNode->identities;
   while (each != NULL){
     memcpy(&encoded[offset], each->index, 16);
@@ -173,7 +177,7 @@ void sendToRoom(char *msg, char *room){
 void close_socket(int fd){
   close(fd);
 
-  struct socketBST *sNode = searchSocket(fd);
+  struct socketBST *sNode = searchSocket(sRoot, fd);
 
   if(sNode == NULL)
     return;
@@ -186,7 +190,7 @@ void close_socket(int fd){
     removeIdentity(&rNode->identities, rIdentity);
 
     if(rNode->identities == NULL) {
-      removeRoom(rNode);
+      removeRoom(rRoot, rNode);
     } else {
       char* bye;
       bye = smalloc(25 + strlen(sIdentity->identity->name));
@@ -204,7 +208,7 @@ void close_socket(int fd){
     sIdentity = sNode->identities;
   }
 
-  removeSocket(sNode);
+  removeSocket(sRoot, sNode);
 }
 
 // ### Get name Colour
@@ -497,7 +501,7 @@ int main(int argc, char *argv[]){
       socketNode->left = NULL;
       socketNode->right = NULL;
 
-      insertSocket(socketNode);
+      insertSocket(sRoot, socketNode);
     }else{
       // Else, it's just a regular message
       // Could probably still implement this better...
@@ -627,11 +631,11 @@ int main(int argc, char *argv[]){
           }
           urlStringChop(&name, 22);
 
-          struct socketBST *sNode = searchSocket(events[0].data.fd);
+          struct socketBST *sNode = searchSocket(sRoot, events[0].data.fd);
           if(sNode == NULL)
             continue;
 
-          struct roomBST *rNode = searchRoom(room);
+          struct roomBST *rNode = searchRoom(rRoot, room);
           if(rNode == NULL){
             rNode = malloc(sizeof(struct roomBST));
             rNode->room = smalloc(strlen(room));
@@ -642,7 +646,7 @@ int main(int argc, char *argv[]){
             rNode->left = NULL;
             rNode->right = NULL;
 
-            insertRoom(rNode);
+            insertRoom(rRoot, rNode);
           } else {
             // Make sure the name isn't already being used in that room...
             struct identityBST* tmp = rNode->identities;
@@ -787,7 +791,7 @@ int main(int argc, char *argv[]){
           iRoom[0] = 0;
           iRoom++;
 
-          struct roomBST *rNode = searchRoom(iRoom);
+          struct roomBST *rNode = searchRoom(rRoot, iRoom);
           if (rNode == NULL)
             continue;
 
@@ -806,7 +810,7 @@ int main(int argc, char *argv[]){
           if (rIdentity == NULL)
             continue;
 
-          struct socketBST *thisSocket = searchSocket(events[0].data.fd);
+          struct socketBST *thisSocket = searchSocket(sRoot, events[0].data.fd);
           struct identityBST *thisIdentity =
             searchIdentity(thisSocket->identities, iId);
 
@@ -835,7 +839,7 @@ int main(int argc, char *argv[]){
           if(msg + 7 == NULL)
             continue;
 
-          struct socketBST* sNode = searchSocket(events[0].data.fd);
+          struct socketBST* sNode = searchSocket(sRoot, events[0].data.fd);
           struct identityBST* sIdentity =
             searchIdentity(sNode->identities, msg + 7);
 
@@ -849,7 +853,7 @@ int main(int argc, char *argv[]){
           removeIdentity(&rNode->identities, rIdentity);
 
           if(rNode->identities == NULL)
-            removeRoom(rNode);
+            removeRoom(rRoot, rNode);
           else{
             char* bye;
             bye = smalloc(25 + strlen(sIdentity->identity->name));
@@ -876,7 +880,7 @@ int main(int argc, char *argv[]){
         if (strncmp("chat: ", msg, 6))
           continue;
 
-        struct socketBST *socketNode = searchSocket(events[0].data.fd);
+        struct socketBST *socketNode = searchSocket(sRoot, events[0].data.fd);
         if (socketNode == NULL)
           continue;
 

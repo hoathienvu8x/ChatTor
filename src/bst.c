@@ -1,57 +1,8 @@
-/*
-title: bst
-colour: white
-emphasis: #6b6bb8
-highlight: atelier-lakeside-dark
-background: black
----
-# BST
+#include <stdlib.h>
+#include <string.h>
+#include "bst.h"
 
-## Structs
-*/
-
-// Forward declarations
-struct identityNode;
-
-// ### Identity BST 
-struct identityBST{
-  char index[17];
-  unsigned char rb;
-  struct identityNode *identity;
-  struct identityBST *left, *right;
-};
-
-// ### Socket BST
-struct socketBST{
-  int id;
-  unsigned char rb;
-  struct identityBST *identities;
-  struct socketBST *left, *right;
-};
-
-// ### Room BST
-struct roomBST{
-  char* room;
-  unsigned char rb;
-  struct identityBST *identities;
-  struct roomBST *left, *right;
-};
-
-// ### Identity node
-struct identityNode{
-  char *name, *color;
-  struct socketBST *socket;
-  struct roomBST *room;
-};
-
-
-// ### Globobal variables
-struct socketBST *sRoot = NULL;
-struct roomBST *rRoot = NULL;
-
-
-// ### Insert Socket
-void insertSocket(struct socketBST *socket){
+void insertSocket(struct socketBST *sRoot, struct socketBST *socket) {
   if(sRoot == NULL){
     sRoot = socket;
     return;
@@ -79,7 +30,7 @@ void insertIdentity(struct identityBST **root, struct identityBST *identity){
 }
 
 // ### Insert Room
-void insertRoom(struct roomBST *room){
+void insertRoom(struct roomBST *rRoot, struct roomBST *room){
   if(rRoot == NULL){
     rRoot = room;
     return;
@@ -93,7 +44,7 @@ void insertRoom(struct roomBST *room){
 }
 
 // ### Search Socket
-struct socketBST* searchSocket(int id){
+struct socketBST* searchSocket(struct socketBST *sRoot, int id){
   struct socketBST *tmp = sRoot;
   while(tmp != NULL){
     if(tmp->id == id)
@@ -119,7 +70,7 @@ struct identityBST* searchIdentity(struct identityBST *root, char* id){
 }
 
 // ### Search Room
-struct roomBST* searchRoom(char* room){
+struct roomBST* searchRoom(struct roomBST *rRoot, char* room){
   struct roomBST *tmp = rRoot;
   while(tmp != NULL){
     if(!strcmp(tmp->room, room) && strlen(room) == strlen(tmp->room))
@@ -132,7 +83,7 @@ struct roomBST* searchRoom(char* room){
 }
 
 // ### Remove Socket
-void removeSocket(struct socketBST *socket){
+void removeSocket(struct socketBST *sRoot, struct socketBST *socket){
   if(sRoot == NULL)
     return;
 
@@ -177,7 +128,7 @@ void removeIdentity(struct identityBST **root, struct identityBST *identity){
 }
 
 // ### Remove room
-void removeRoom(struct roomBST *room){
+void removeRoom(struct roomBST *rRoot, struct roomBST *room){
   if(rRoot == NULL)
     return;
 

@@ -5,7 +5,8 @@ all: socket
 
 socket:
 	mkdir -p bin
-	$(CC) $(CFLAGS) -Wall -xc -o bin/web_socket_server src/socket.c -lcrypto
+	$(CC) $(CFLAGS) -Wall -xc -o bin/web_socket_server \
+	src/sha1.c src/bst.c src/socket.c
 
 clean:
 	rm bin/*
