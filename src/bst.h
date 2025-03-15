@@ -1,6 +1,8 @@
 #ifndef _BST_H
 #define _BST_H
 
+#define MAX_INDEX_SIZE 16
+
 /*
 title: bst
 colour: white
@@ -18,7 +20,7 @@ struct identityNode;
 
 // ### Identity BST 
 struct identityBST{
-  char index[17];
+  char index[MAX_INDEX_SIZE + 1];
   unsigned char rb;
   struct identityNode *identity;
   struct identityBST *left, *right;

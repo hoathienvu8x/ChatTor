@@ -129,7 +129,7 @@ void urlStringChop(char** string, unsigned long len){
 // ### Send to room
 // Sends the message to everyone in the room
 void sendToRoom(char *msg, char *room){
-  unsigned short len = (unsigned short)strlen(msg) + 16;
+  unsigned short len = (unsigned short)strlen(msg) + MAX_INDEX_SIZE;
   unsigned char offset;
 
   // Sorry, I'm too lazy to add support messages over 65535 bytes
@@ -150,13 +150,13 @@ void sendToRoom(char *msg, char *room){
     encoded[3] = len % 256;
   } else {
     offset = 2;
-    encoded = smalloc(len+18);
+    encoded = smalloc(len + MAX_INDEX_SIZE + 2);
 
     encoded[0] = -127;
     encoded[1] = len;
   }
 
-  memcpy(&encoded[offset+16], msg, len-16);
+  memcpy(&encoded[offset + MAX_INDEX_SIZE], msg, len - MAX_INDEX_SIZE);
   len += offset;
 
   encoded[len] = 0;
@@ -164,7 +164,7 @@ void sendToRoom(char *msg, char *room){
   struct roomBST *rNode = searchRoom(rRoot, room);
   struct identityBST *each = rNode->identities;
   while (each != NULL){
-    memcpy(&encoded[offset], each->index, 16);
+    memcpy(&encoded[offset], each->index, MAX_INDEX_SIZE);
     send(each->identity->socket->id, encoded, len, MSG_NOSIGNAL);
     each = each->right;
   }
